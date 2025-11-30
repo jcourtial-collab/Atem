@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Portal Breath V5 Final</title>
+    <title>Portal Breath V6</title>
     <style>
         :root {
             --bg-deep: #000000;
@@ -12,6 +12,7 @@
             --glass-border: rgba(255, 255, 255, 0.1);
             --text-main: rgba(255, 255, 255, 0.9);
             --text-dim: rgba(255, 255, 255, 0.4);
+            --text-dark: rgba(255, 255, 255, 0.2);
             --base-size: 22vmin; 
         }
 
@@ -21,10 +22,6 @@
             height: 100vh;
             width: 100vw;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             background-color: var(--bg-deep);
             color: var(--text-main);
             -webkit-tap-highlight-color: transparent;
@@ -45,23 +42,21 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* --- Sound Toggle (Top Right) --- */
+        /* --- Controls --- */
         .top-controls {
             position: absolute;
             top: max(20px, env(safe-area-inset-top)); 
             right: max(20px, env(safe-area-inset-right));
-            z-index: 10;
+            z-index: 20;
         }
         
         .icon-btn {
             width: 48px; height: 48px;
             border-radius: 50%;
             background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            color: var(--text-dim);
+            cursor: pointer; color: var(--text-dim);
             transition: all 0.3s ease;
             border: 1px solid var(--glass-border);
         }
@@ -72,16 +67,24 @@
             border-color: rgba(255, 255, 255, 0.3);
         }
 
-        /* --- Visualizer Scene --- */
-        .scene {
-            position: relative;
-            width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
+        /* --- CENTER ANCHOR (Das Herzstück) --- */
+        /* Dieser Container sitzt mathematisch exakt in der Mitte */
+        .center-anchor {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0; height: 0; /* Hat keine Größe, ist nur der Ankerpunkt */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none; /* Klicks gehen durch */
         }
 
         /* Der Halo Ring */
         .halo {
-            position: absolute;
+            position: absolute; /* Relativ zum center-anchor */
             width: var(--base-size); 
             height: var(--base-size);
             border-radius: 50%;
@@ -92,7 +95,6 @@
                 0 0 40px 0px rgba(var(--glow-color), 0.1),
                 inset 0 0 20px rgba(var(--glow-color), 0.1);
 
-            transform: translateZ(0);
             will-change: transform, box-shadow;
         }
 
@@ -111,8 +113,11 @@
 
         /* Text Labels */
         .text-container {
-            z-index: 2; pointer-events: none; text-align: center;
-            display: flex; flex-direction: column; gap: 1vmin;
+            position: absolute;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 1vmin;
+            width: 300px; /* Breite definiert, damit Text zentriert bleibt */
+            text-align: center;
         }
         
         .main-label {
@@ -127,52 +132,49 @@
             transition: opacity 0.5s;
         }
 
-        .click-area {
-            position: absolute; width: 100%; height: 100%; z-index: 5; cursor: pointer;
+        /* Neuer Zähler */
+        .cycle-label {
+            font-size: 3vmin; 
+            color: var(--text-dark); 
+            margin-top: 5px;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            opacity: 0;
+            transition: opacity 0.5s;
         }
 
-        /* --- BIG MODE DOCK (Bottom) --- */
+        /* Klickfläche über den gesamten Screen */
+        .click-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 15; cursor: pointer;
+        }
+
+        /* --- DOCK (Bottom) --- */
         .mode-dock {
             position: absolute; 
             bottom: max(30px, env(safe-area-inset-bottom)); 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%; max-width: 500px;
             
-            /* Breite Logik */
-            width: 90%; 
-            max-width: 500px; /* Nicht zu breit auf Tablets/Desktop */
-            
-            background: rgba(30, 30, 30, 0.6); /* Etwas dunkler für Kontrast */
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            
-            padding: 8px; 
-            border-radius: 24px;
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 8px; border-radius: 24px;
             border: 1px solid var(--glass-border);
             
-            display: flex; 
-            justify-content: space-between;
-            gap: 8px; /* Abstand zwischen Buttons */
-            z-index: 10;
+            display: flex; justify-content: space-between; gap: 8px;
+            z-index: 20;
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
         
         .mode-btn {
-            flex: 1; /* Jeder Button bekommt gleich viel Platz */
-            padding: 16px 0; /* Hohe Klickfläche */
-            
+            flex: 1; padding: 16px 0;
             display: flex; align-items: center; justify-content: center;
             border-radius: 18px;
-            
-            font-size: 1rem; 
-            font-weight: 500;
-            color: var(--text-dim);
+            font-size: 1rem; font-weight: 500; color: var(--text-dim);
             letter-spacing: 0.05em;
-            
-            cursor: pointer; 
-            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            background: transparent;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         
-        /* Aktiver Status */
         .mode-btn.active {
             background: rgba(255, 255, 255, 0.15);
             color: white; 
@@ -180,24 +182,11 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         
-        /* Hover/Touch Feedback */
-        .mode-btn:active {
-            transform: scale(0.96);
-        }
+        .mode-btn:active { transform: scale(0.96); }
 
-        /* Landscape Optimierung: Etwas flacher, damit Atemkreis Platz hat */
         @media (orientation: landscape) and (max-height: 500px) {
-            .mode-dock { 
-                bottom: 15px; 
-                padding: 5px;
-                border-radius: 16px;
-            }
-            .mode-btn { 
-                padding: 10px 0; 
-                font-size: 0.85rem;
-                border-radius: 12px;
-            }
-            .top-controls { top: 15px; right: max(30px, env(safe-area-inset-right)); }
+            .mode-dock { bottom: 15px; padding: 5px; border-radius: 16px; }
+            .mode-btn { padding: 10px 0; font-size: 0.85rem; border-radius: 12px; }
         }
 
     </style>
@@ -215,16 +204,19 @@
         </div>
     </div>
 
-    <div class="scene">
-        <div class="click-area" onclick="toggleSession()"></div>
+    <!-- Click Layer liegt über Background aber unter Controls -->
+    <div class="click-layer" onclick="toggleSession()"></div>
+
+    <!-- Zentrale Visualisierung -->
+    <div class="center-anchor">
         <div class="halo idle" id="halo"></div>
         <div class="text-container">
             <div class="main-label" id="mainText">Start</div>
             <div class="timer-label" id="timerText">0</div>
+            <div class="cycle-label" id="cycleText">Noch 4</div>
         </div>
     </div>
 
-    <!-- Neues Wide Dock Layout -->
     <div class="mode-dock">
         <div class="mode-btn active" onclick="setMode('478')">4-7-8</div>
         <div class="mode-btn" onclick="setMode('box')">Box</div>
@@ -239,21 +231,33 @@
     let audioCtx = null;
     let phaseTimeout = null;
     let countdownInterval = null;
+    
+    // Zähler Variablen
+    let roundsLeft = 0;
 
     // Elements
     const halo = document.getElementById('halo');
     const mainText = document.getElementById('mainText');
     const timerText = document.getElementById('timerText');
+    const cycleText = document.getElementById('cycleText');
     const modeBtns = document.querySelectorAll('.mode-btn');
     const soundBtn = document.getElementById('soundBtn');
 
-    // Config (Responsive Scale)
+    // Config mit "defaultRounds"
     const modes = {
         '478': [
             { text: "Einatmen", time: 4, scale: 3.5, type: 'breath' }, 
             { text: "Halten", time: 7, scale: 3.5, type: 'hold' },
             { text: "Ausatmen", time: 8, scale: 1.0, type: 'breath' }
         ],
+        // Metadaten für die Modi (außerhalb des Arrays geht in JS schwer bei dieser Struktur, 
+        // daher hardcoden wir die Runden in der setMode Logik oder hängen sie hier an)
+        'defaults': {
+            '478': 4,      // 4 Zyklen sind Standard für 4-7-8
+            'box': 12,     // Box Breathing macht man meist länger (ca 3-4 min)
+            'extend': 10   // Zur Beruhigung
+        },
+
         'box': [
             { text: "Ein", time: 4, scale: 3.5, type: 'breath' },
             { text: "Halten", time: 4, scale: 3.5, type: 'hold' },
@@ -306,6 +310,10 @@
         currentMode = mode;
         modeBtns.forEach(p => p.classList.remove('active'));
         event.currentTarget.classList.add('active');
+        
+        // Reset Anzeige
+        mainText.innerText = "Start";
+        cycleText.style.opacity = 0;
     }
 
     function toggleSession() {
@@ -317,10 +325,16 @@
         if(soundEnabled) initAudio();
         isRunning = true;
         
+        // Runden initialisieren
+        roundsLeft = modes['defaults'][currentMode];
+        updateCycleText();
+        
         halo.classList.remove('idle');
         halo.style.transform = "scale(1)";
         halo.style.transition = "none";
+        
         timerText.style.opacity = 1;
+        cycleText.style.opacity = 1;
 
         setTimeout(() => {
             runPhase(0);
@@ -334,6 +348,7 @@
         
         mainText.innerText = "Start";
         timerText.style.opacity = 0;
+        cycleText.style.opacity = 0;
         
         halo.style.transition = "transform 1.5s ease-out, box-shadow 1.5s ease-out";
         halo.style.transform = "scale(1)";
@@ -344,12 +359,30 @@
         }, 1500);
     }
 
+    function updateCycleText() {
+        cycleText.innerText = "Noch " + roundsLeft + " Runden";
+    }
+
     function runPhase(index) {
         if(!isRunning) return;
 
         const cycle = modes[currentMode];
+        
+        // Zyklus Ende Erkennung: Wenn index durch Länge teilbar ist, beginnt neuer Zyklus
+        if (index > 0 && index % cycle.length === 0) {
+            roundsLeft--;
+            updateCycleText();
+            if(roundsLeft <= 0) {
+                // Fertig!
+                mainText.innerText = "Fertig";
+                stopSession();
+                return;
+            }
+        }
+
         const step = cycle[index % cycle.length];
 
+        // Visuals
         halo.style.transition = `transform ${step.time}s cubic-bezier(0.45, 0, 0.15, 1), box-shadow ${step.time}s ease`;
         halo.style.transform = `scale(${step.scale})`;
 
@@ -358,13 +391,14 @@
 
         mainText.innerText = step.text;
         
+        // Audio
         let freq = 200;
         if(step.text.includes("Ein")) freq = 180;
         if(step.text.includes("Halten") || step.text.includes("Leer")) freq = 180;
         if(step.text.includes("Aus")) freq = 120;
-        
         playTone(freq, step.time);
 
+        // Timer
         let timeLeft = step.time;
         timerText.innerText = timeLeft;
         
@@ -375,6 +409,7 @@
             if(timeLeft > 0) timerText.innerText = timeLeft;
         }, 1000);
 
+        // Next Phase
         phaseTimeout = setTimeout(() => {
             runPhase(index + 1);
         }, step.time * 1000);
