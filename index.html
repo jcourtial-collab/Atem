@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Portal Breath V5 Final</title>
+    <style>
+        :root {
+            --bg-deep: #000000;
+            --glow-color: 100, 210, 255; 
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: rgba(255, 255, 255, 0.9);
+            --text-dim: rgba(255, 255, 255, 0.4);
+            --base-size: 22vmin; 
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- Ambient Background --- */
+        .ambient-bg {
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at center, #1a2a3a 0%, #000000 65%);
+            opacity: 0.6;
+            z-index: -1;
+            animation: rotateBg 60s linear infinite;
+        }
+
+        @keyframes rotateBg {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- Sound Toggle (Top Right) --- */
+        .top-controls {
+            position: absolute;
+            top: max(20px, env(safe-area-inset-top)); 
+            right: max(20px, env(safe-area-inset-right));
+            z-index: 10;
+        }
+        
+        .icon-btn {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+            border: 1px solid var(--glass-border);
+        }
+        .icon-btn.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            box-shadow: 0 0 20px rgba(var(--glow-color), 0.3);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* --- Visualizer Scene --- */
+        .scene {
+            position: relative;
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Der Halo Ring */
+        .halo {
+            position: absolute;
+            width: var(--base-size); 
+            height: var(--base-size);
+            border-radius: 50%;
+            background: transparent;
+            
+            box-shadow: 
+                0 0 0 1px rgba(var(--glow-color), 0.3),
+                0 0 40px 0px rgba(var(--glow-color), 0.1),
+                inset 0 0 20px rgba(var(--glow-color), 0.1);
+
+            transform: translateZ(0);
+            will-change: transform, box-shadow;
+        }
+
+        .halo.idle { animation: idleBreathe 4s infinite ease-in-out; }
+        .halo.holding {
+            box-shadow: 
+                0 0 0 2px rgba(255, 255, 255, 0.6),
+                0 0 25px 5px rgba(var(--glow-color), 0.5),
+                inset 0 0 15px rgba(var(--glow-color), 0.3);
+        }
+
+        @keyframes idleBreathe {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+
+        /* Text Labels */
+        .text-container {
+            z-index: 2; pointer-events: none; text-align: center;
+            display: flex; flex-direction: column; gap: 1vmin;
+        }
+        
+        .main-label {
+            font-size: 5vmin; 
+            text-transform: uppercase; letter-spacing: 0.25em;
+            font-weight: 300; text-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+        
+        .timer-label {
+            font-variant-numeric: tabular-nums;
+            font-size: 4vmin; color: var(--text-dim); opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .click-area {
+            position: absolute; width: 100%; height: 100%; z-index: 5; cursor: pointer;
+        }
+
+        /* --- BIG MODE DOCK (Bottom) --- */
+        .mode-dock {
+            position: absolute; 
+            bottom: max(30px, env(safe-area-inset-bottom)); 
+            
+            /* Breite Logik */
+            width: 90%; 
+            max-width: 500px; /* Nicht zu breit auf Tablets/Desktop */
+            
+            background: rgba(30, 30, 30, 0.6); /* Etwas dunkler für Kontrast */
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            
+            padding: 8px; 
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            
+            display: flex; 
+            justify-content: space-between;
+            gap: 8px; /* Abstand zwischen Buttons */
+            z-index: 10;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+        
+        .mode-btn {
+            flex: 1; /* Jeder Button bekommt gleich viel Platz */
+            padding: 16px 0; /* Hohe Klickfläche */
+            
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 18px;
+            
+            font-size: 1rem; 
+            font-weight: 500;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+            
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            background: transparent;
+        }
+        
+        /* Aktiver Status */
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white; 
+            text-shadow: 0 0 15px rgba(255,255,255,0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        /* Hover/Touch Feedback */
+        .mode-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Landscape Optimierung: Etwas flacher, damit Atemkreis Platz hat */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .mode-dock { 
+                bottom: 15px; 
+                padding: 5px;
+                border-radius: 16px;
+            }
+            .mode-btn { 
+                padding: 10px 0; 
+                font-size: 0.85rem;
+                border-radius: 12px;
+            }
+            .top-controls { top: 15px; right: max(30px, env(safe-area-inset-right)); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="ambient-bg"></div>
+
+    <div class="top-controls">
+        <div class="icon-btn" id="soundBtn" onclick="toggleSound()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+        </div>
+    </div>
+
+    <div class="scene">
+        <div class="click-area" onclick="toggleSession()"></div>
+        <div class="halo idle" id="halo"></div>
+        <div class="text-container">
+            <div class="main-label" id="mainText">Start</div>
+            <div class="timer-label" id="timerText">0</div>
+        </div>
+    </div>
+
+    <!-- Neues Wide Dock Layout -->
+    <div class="mode-dock">
+        <div class="mode-btn active" onclick="setMode('478')">4-7-8</div>
+        <div class="mode-btn" onclick="setMode('box')">Box</div>
+        <div class="mode-btn" onclick="setMode('extend')">Lang</div>
+    </div>
+
+<script>
+    // State
+    let isRunning = false;
+    let currentMode = '478';
+    let soundEnabled = false;
+    let audioCtx = null;
+    let phaseTimeout = null;
+    let countdownInterval = null;
+
+    // Elements
+    const halo = document.getElementById('halo');
+    const mainText = document.getElementById('mainText');
+    const timerText = document.getElementById('timerText');
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    const soundBtn = document.getElementById('soundBtn');
+
+    // Config (Responsive Scale)
+    const modes = {
+        '478': [
+            { text: "Einatmen", time: 4, scale: 3.5, type: 'breath' }, 
+            { text: "Halten", time: 7, scale: 3.5, type: 'hold' },
+            { text: "Ausatmen", time: 8, scale: 1.0, type: 'breath' }
+        ],
+        'box': [
+            { text: "Ein", time: 4, scale: 3.5, type: 'breath' },
+            { text: "Halten", time: 4, scale: 3.5, type: 'hold' },
+            { text: "Aus", time: 4, scale: 1.0, type: 'breath' },
+            { text: "Leer", time: 4, scale: 1.0, type: 'hold' }
+        ],
+        'extend': [
+            { text: "Ein", time: 3, scale: 3.5, type: 'breath' },
+            { text: "Lang Aus", time: 6, scale: 1.0, type: 'breath' }
+        ]
+    };
+
+    // --- Audio ---
+    function initAudio() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playTone(freq, duration) {
+        if (!soundEnabled || !audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const now = audioCtx.currentTime;
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.1, now + 1);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(now + duration + 0.5);
+    }
+
+    // --- Logic ---
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        soundBtn.classList.toggle('active', soundEnabled);
+        if(soundEnabled) initAudio();
+    }
+
+    function setMode(mode) {
+        if(isRunning) stopSession();
+        currentMode = mode;
+        modeBtns.forEach(p => p.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    function toggleSession() {
+        if(isRunning) stopSession();
+        else startSession();
+    }
+
+    function startSession() {
+        if(soundEnabled) initAudio();
+        isRunning = true;
+        
+        halo.classList.remove('idle');
+        halo.style.transform = "scale(1)";
+        halo.style.transition = "none";
+        timerText.style.opacity = 1;
+
+        setTimeout(() => {
+            runPhase(0);
+        }, 50);
+    }
+
+    function stopSession() {
+        isRunning = false;
+        clearTimeout(phaseTimeout);
+        clearInterval(countdownInterval);
+        
+        mainText.innerText = "Start";
+        timerText.style.opacity = 0;
+        
+        halo.style.transition = "transform 1.5s ease-out, box-shadow 1.5s ease-out";
+        halo.style.transform = "scale(1)";
+        halo.classList.remove('holding');
+        
+        setTimeout(() => {
+            if(!isRunning) halo.classList.add('idle');
+        }, 1500);
+    }
+
+    function runPhase(index) {
+        if(!isRunning) return;
+
+        const cycle = modes[currentMode];
+        const step = cycle[index % cycle.length];
+
+        halo.style.transition = `transform ${step.time}s cubic-bezier(0.45, 0, 0.15, 1), box-shadow ${step.time}s ease`;
+        halo.style.transform = `scale(${step.scale})`;
+
+        if (step.type === 'hold') halo.classList.add('holding');
+        else halo.classList.remove('holding');
+
+        mainText.innerText = step.text;
+        
+        let freq = 200;
+        if(step.text.includes("Ein")) freq = 180;
+        if(step.text.includes("Halten") || step.text.includes("Leer")) freq = 180;
+        if(step.text.includes("Aus")) freq = 120;
+        
+        playTone(freq, step.time);
+
+        let timeLeft = step.time;
+        timerText.innerText = timeLeft;
+        
+        clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+            if(!isRunning) return;
+            timeLeft--;
+            if(timeLeft > 0) timerText.innerText = timeLeft;
+        }, 1000);
+
+        phaseTimeout = setTimeout(() => {
+            runPhase(index + 1);
+        }, step.time * 1000);
+    }
+</script>
+</body>
+</html>
