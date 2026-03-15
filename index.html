@@ -7,13 +7,13 @@
     <style>
         :root {
             --bg-deep: #000000;
-            --glow-color: 100, 210, 255; 
+            --glow-color: 100, 210, 255;
             --glass-bg: rgba(255, 255, 255, 0.1);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text-main: rgba(255, 255, 255, 0.9);
             --text-dim: rgba(255, 255, 255, 0.4);
             --text-dark: rgba(255, 255, 255, 0.2);
-            --base-size: 22vmin; 
+            --base-size: 22vmin;
         }
 
         body {
@@ -45,11 +45,11 @@
         /* --- Controls --- */
         .top-controls {
             position: absolute;
-            top: max(20px, env(safe-area-inset-top)); 
+            top: max(20px, env(safe-area-inset-top));
             right: max(20px, env(safe-area-inset-right));
             z-index: 20;
         }
-        
+
         .icon-btn {
             width: 48px; height: 48px;
             border-radius: 50%;
@@ -85,12 +85,12 @@
         /* Der Halo Ring */
         .halo {
             position: absolute; /* Relativ zum center-anchor */
-            width: var(--base-size); 
+            width: var(--base-size);
             height: var(--base-size);
             border-radius: 50%;
             background: transparent;
-            
-            box-shadow: 
+
+            box-shadow:
                 0 0 0 1px rgba(var(--glow-color), 0.3),
                 0 0 40px 0px rgba(var(--glow-color), 0.1),
                 inset 0 0 20px rgba(var(--glow-color), 0.1);
@@ -100,15 +100,23 @@
 
         .halo.idle { animation: idleBreathe 4s infinite ease-in-out; }
         .halo.holding {
-            box-shadow: 
+            box-shadow:
                 0 0 0 2px rgba(255, 255, 255, 0.6),
                 0 0 25px 5px rgba(var(--glow-color), 0.5),
                 inset 0 0 15px rgba(var(--glow-color), 0.3);
+        }
+        .halo.finish-flash {
+            animation: finishFlash 1s ease-out forwards;
         }
 
         @keyframes idleBreathe {
             0%, 100% { transform: scale(1); opacity: 0.5; }
             50% { transform: scale(1.1); opacity: 0.7; }
+        }
+
+        @keyframes finishFlash {
+            0%   { box-shadow: 0 0 0 3px rgba(255,255,255,0.9), 0 0 80px 20px rgba(var(--glow-color), 0.8), inset 0 0 40px rgba(var(--glow-color), 0.5); }
+            100% { box-shadow: 0 0 0 1px rgba(var(--glow-color), 0.3), 0 0 40px 0px rgba(var(--glow-color), 0.1), inset 0 0 20px rgba(var(--glow-color), 0.1); }
         }
 
         /* Text Labels */
@@ -119,28 +127,48 @@
             width: 300px; /* Breite definiert, damit Text zentriert bleibt */
             text-align: center;
         }
-        
+
         .main-label {
-            font-size: 5vmin; 
+            font-size: 5vmin;
             text-transform: uppercase; letter-spacing: 0.25em;
             font-weight: 300; text-shadow: 0 0 15px rgba(0,0,0,0.8);
         }
-        
+
         .timer-label {
             font-variant-numeric: tabular-nums;
             font-size: 4vmin; color: var(--text-dim); opacity: 0;
             transition: opacity 0.5s;
         }
 
-        /* Neuer Zähler */
+        /* Zähler & Phasen-Dots */
         .cycle-label {
-            font-size: 3vmin; 
-            color: var(--text-dark); 
+            font-size: 3vmin;
+            color: var(--text-dark);
             margin-top: 5px;
             font-weight: 400;
             letter-spacing: 0.05em;
             opacity: 0;
             transition: opacity 0.5s;
+        }
+
+        .phase-dots {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .phase-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(var(--glow-color), 0.25);
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+
+        .phase-dot.active {
+            background: rgba(var(--glow-color), 0.85);
+            transform: scale(1.4);
         }
 
         /* Klickfläche über den gesamten Screen */
@@ -150,22 +178,22 @@
 
         /* --- DOCK (Bottom) --- */
         .mode-dock {
-            position: absolute; 
-            bottom: max(30px, env(safe-area-inset-bottom)); 
+            position: absolute;
+            bottom: max(30px, env(safe-area-inset-bottom));
             left: 50%;
             transform: translateX(-50%);
             width: 90%; max-width: 500px;
-            
+
             background: rgba(30, 30, 30, 0.6);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             padding: 8px; border-radius: 24px;
             border: 1px solid var(--glass-border);
-            
+
             display: flex; justify-content: space-between; gap: 8px;
             z-index: 20;
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
-        
+
         .mode-btn {
             flex: 1; padding: 16px 0;
             display: flex; align-items: center; justify-content: center;
@@ -174,14 +202,14 @@
             letter-spacing: 0.05em;
             cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        
+
         .mode-btn.active {
             background: rgba(255, 255, 255, 0.15);
-            color: white; 
+            color: white;
             text-shadow: 0 0 15px rgba(255,255,255,0.4);
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        
+
         .mode-btn:active { transform: scale(0.96); }
 
         @media (orientation: landscape) and (max-height: 500px) {
@@ -213,68 +241,128 @@
         <div class="text-container">
             <div class="main-label" id="mainText">Start</div>
             <div class="timer-label" id="timerText">0</div>
-            <div class="cycle-label" id="cycleText">Noch 4</div>
+            <div class="cycle-label" id="cycleText"></div>
+            <div class="phase-dots" id="phaseDots"></div>
         </div>
     </div>
 
     <div class="mode-dock">
-        <div class="mode-btn active" onclick="setMode('478')">4-7-8</div>
-        <div class="mode-btn" onclick="setMode('box')">Box</div>
-        <div class="mode-btn" onclick="setMode('extend')">Lang</div>
+        <div class="mode-btn active" onclick="setMode('478', this)">4-7-8</div>
+        <div class="mode-btn" onclick="setMode('box', this)">Box</div>
+        <div class="mode-btn" onclick="setMode('extend', this)">Lang</div>
     </div>
 
 <script>
-    // State
+(function() {
+    // --- State ---
     let isRunning = false;
     let currentMode = '478';
     let soundEnabled = false;
     let audioCtx = null;
     let phaseTimeout = null;
     let countdownInterval = null;
-    
-    // Zähler Variablen
     let roundsLeft = 0;
+    let totalRounds = 0;
+    let currentPhaseIndex = 0;
+    let wakeLock = null;
 
-    // Elements
+    // --- Elements ---
     const halo = document.getElementById('halo');
     const mainText = document.getElementById('mainText');
     const timerText = document.getElementById('timerText');
     const cycleText = document.getElementById('cycleText');
+    const phaseDots = document.getElementById('phaseDots');
     const modeBtns = document.querySelectorAll('.mode-btn');
     const soundBtn = document.getElementById('soundBtn');
 
-    // Config mit "defaultRounds"
+    // --- Config ---
+    // freq: Ton-Frequenz direkt in der Phase gespeichert (kein fragiles Text-Matching)
     const modes = {
-        '478': [
-            { text: "Einatmen", time: 4, scale: 3.5, type: 'breath' }, 
-            { text: "Halten", time: 7, scale: 3.5, type: 'hold' },
-            { text: "Ausatmen", time: 8, scale: 1.0, type: 'breath' }
-        ],
-        // Metadaten für die Modi (außerhalb des Arrays geht in JS schwer bei dieser Struktur, 
-        // daher hardcoden wir die Runden in der setMode Logik oder hängen sie hier an)
-        'defaults': {
-            '478': 4,      // 4 Zyklen sind Standard für 4-7-8
-            'box': 12,     // Box Breathing macht man meist länger (ca 3-4 min)
-            'extend': 10   // Zur Beruhigung
+        '478': {
+            defaultRounds: 4,
+            phases: [
+                { text: "Einatmen", time: 4, scale: 3.5, type: 'breath', freq: 180 },
+                { text: "Halten",   time: 7, scale: 3.5, type: 'hold',   freq: 180 },
+                { text: "Ausatmen", time: 8, scale: 1.0, type: 'breath', freq: 120 }
+            ]
         },
-
-        'box': [
-            { text: "Ein", time: 4, scale: 3.5, type: 'breath' },
-            { text: "Halten", time: 4, scale: 3.5, type: 'hold' },
-            { text: "Aus", time: 4, scale: 1.0, type: 'breath' },
-            { text: "Leer", time: 4, scale: 1.0, type: 'hold' }
-        ],
-        'extend': [
-            { text: "Ein", time: 3, scale: 3.5, type: 'breath' },
-            { text: "Lang Aus", time: 6, scale: 1.0, type: 'breath' }
-        ]
+        'box': {
+            defaultRounds: 12,
+            phases: [
+                { text: "Ein",   time: 4, scale: 3.5, type: 'breath', freq: 180 },
+                { text: "Halten",time: 4, scale: 3.5, type: 'hold',   freq: 180 },
+                { text: "Aus",   time: 4, scale: 1.0, type: 'breath', freq: 120 },
+                { text: "Leer",  time: 4, scale: 1.0, type: 'hold',   freq: 120 }
+            ]
+        },
+        'extend': {
+            defaultRounds: 10,
+            phases: [
+                { text: "Ein",      time: 3, scale: 3.5, type: 'breath', freq: 180 },
+                { text: "Lang Aus", time: 6, scale: 1.0, type: 'breath', freq: 120 }
+            ]
+        }
     };
+
+    // --- LocalStorage ---
+    function loadPrefs() {
+        const savedMode = localStorage.getItem('atem_mode');
+        const savedSound = localStorage.getItem('atem_sound');
+
+        if (savedMode && modes[savedMode]) {
+            currentMode = savedMode;
+            modeBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${savedMode}'`));
+            });
+        }
+
+        if (savedSound === 'true') {
+            soundEnabled = true;
+            soundBtn.classList.add('active');
+        }
+    }
+
+    function savePrefs() {
+        localStorage.setItem('atem_mode', currentMode);
+        localStorage.setItem('atem_sound', soundEnabled);
+    }
+
+    // --- Screen Wake Lock ---
+    async function requestWakeLock() {
+        if ('wakeLock' in navigator) {
+            try { wakeLock = await navigator.wakeLock.request('screen'); } catch(_) {}
+        }
+    }
+
+    function releaseWakeLock() {
+        if (wakeLock) { wakeLock.release(); wakeLock = null; }
+    }
+
+    // Wenn Tab wieder sichtbar wird und Session läuft, Wake Lock neu anfordern
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && isRunning) requestWakeLock();
+    });
+
+    // --- Phase Dots ---
+    function buildPhaseDots(count) {
+        phaseDots.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'phase-dot';
+            phaseDots.appendChild(dot);
+        }
+    }
+
+    function updatePhaseDot(activeIndex) {
+        const dots = phaseDots.querySelectorAll('.phase-dot');
+        dots.forEach((d, i) => d.classList.toggle('active', i === activeIndex));
+    }
 
     // --- Audio ---
     function initAudio() {
         if (!audioCtx) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext();
+            const AC = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AC();
         }
         if (audioCtx.state === 'suspended') audioCtx.resume();
     }
@@ -289,98 +377,138 @@
         osc.frequency.setValueAtTime(freq, now);
 
         gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(0.1, now + 1);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        gain.gain.linearRampToValueAtTime(0.1, now + 0.8);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration - 0.2);
 
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(now + duration + 0.5);
+        osc.stop(now + duration);
     }
 
     // --- Logic ---
-    function toggleSound() {
+    window.toggleSound = function() {
         soundEnabled = !soundEnabled;
         soundBtn.classList.toggle('active', soundEnabled);
-        if(soundEnabled) initAudio();
-    }
+        if (soundEnabled) initAudio();
+        savePrefs();
+    };
 
-    function setMode(mode) {
-        if(isRunning) stopSession();
+    window.setMode = function(mode, btn) {
+        if (isRunning) stopSession();
         currentMode = mode;
-        modeBtns.forEach(p => p.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        
-        // Reset Anzeige
+        modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         mainText.innerText = "Start";
         cycleText.style.opacity = 0;
-    }
+        phaseDots.style.opacity = 0;
+        savePrefs();
+    };
 
-    function toggleSession() {
-        if(isRunning) stopSession();
+    window.toggleSession = function() {
+        if (isRunning) stopSession();
         else startSession();
-    }
+    };
 
     function startSession() {
-        if(soundEnabled) initAudio();
+        if (soundEnabled) initAudio();
         isRunning = true;
-        
-        // Runden initialisieren
-        roundsLeft = modes['defaults'][currentMode];
-        updateCycleText();
-        
-        halo.classList.remove('idle');
+        requestWakeLock();
+
+        const cfg = modes[currentMode];
+        totalRounds = cfg.defaultRounds;
+        roundsLeft = totalRounds;
+        currentPhaseIndex = 0;
+
+        buildPhaseDots(cfg.phases.length);
+
+        halo.classList.remove('idle', 'finish-flash');
         halo.style.transform = "scale(1)";
         halo.style.transition = "none";
-        
+
         timerText.style.opacity = 1;
         cycleText.style.opacity = 1;
+        phaseDots.style.opacity = 1;
 
-        setTimeout(() => {
-            runPhase(0);
-        }, 50);
+        updateCycleText();
+
+        setTimeout(() => { runPhase(0); }, 50);
     }
 
     function stopSession() {
         isRunning = false;
+        releaseWakeLock();
         clearTimeout(phaseTimeout);
         clearInterval(countdownInterval);
-        
-        mainText.innerText = "Start";
+
         timerText.style.opacity = 0;
         cycleText.style.opacity = 0;
-        
+        phaseDots.style.opacity = 0;
+
+        halo.classList.remove('holding', 'finish-flash');
         halo.style.transition = "transform 1.5s ease-out, box-shadow 1.5s ease-out";
         halo.style.transform = "scale(1)";
-        halo.classList.remove('holding');
-        
+
         setTimeout(() => {
-            if(!isRunning) halo.classList.add('idle');
+            if (!isRunning) halo.classList.add('idle');
         }, 1500);
     }
 
+    function finishSession() {
+        isRunning = false;
+        releaseWakeLock();
+        clearTimeout(phaseTimeout);
+        clearInterval(countdownInterval);
+
+        mainText.innerText = "Fertig ✓";
+        timerText.style.opacity = 0;
+        cycleText.style.opacity = 0;
+        phaseDots.style.opacity = 0;
+
+        // Halo kurz aufleuchten lassen
+        halo.classList.remove('holding');
+        halo.style.transition = "transform 1s ease-out";
+        halo.style.transform = "scale(1)";
+        halo.classList.add('finish-flash');
+
+        // Haptisches Feedback: 3 kurze Pulse
+        navigator.vibrate?.([80, 60, 80, 60, 80]);
+
+        setTimeout(() => {
+            if (!isRunning) {
+                halo.classList.remove('finish-flash');
+                halo.classList.add('idle');
+                mainText.innerText = "Start";
+            }
+        }, 2500);
+    }
+
     function updateCycleText() {
-        cycleText.innerText = "Noch " + roundsLeft + " Runden";
+        const current = totalRounds - roundsLeft + 1;
+        cycleText.innerText = `Runde ${current} / ${totalRounds}`;
     }
 
     function runPhase(index) {
-        if(!isRunning) return;
+        if (!isRunning) return;
 
-        const cycle = modes[currentMode];
-        
-        // Zyklus Ende Erkennung: Wenn index durch Länge teilbar ist, beginnt neuer Zyklus
-        if (index > 0 && index % cycle.length === 0) {
+        const cfg = modes[currentMode];
+        const phases = cfg.phases;
+
+        // Zyklus-Ende: neuer Zyklus beginnt
+        if (index > 0 && index % phases.length === 0) {
             roundsLeft--;
-            updateCycleText();
-            if(roundsLeft <= 0) {
-                // Fertig!
-                mainText.innerText = "Fertig";
-                stopSession();
+            if (roundsLeft <= 0) {
+                finishSession();
                 return;
             }
+            updateCycleText();
         }
 
-        const step = cycle[index % cycle.length];
+        currentPhaseIndex = index % phases.length;
+        const step = phases[currentPhaseIndex];
+
+        // Haptisches Feedback bei Phasenwechsel
+        navigator.vibrate?.(40);
 
         // Visuals
         halo.style.transition = `transform ${step.time}s cubic-bezier(0.45, 0, 0.15, 1), box-shadow ${step.time}s ease`;
@@ -390,30 +518,31 @@
         else halo.classList.remove('holding');
 
         mainText.innerText = step.text;
-        
-        // Audio
-        let freq = 200;
-        if(step.text.includes("Ein")) freq = 180;
-        if(step.text.includes("Halten") || step.text.includes("Leer")) freq = 180;
-        if(step.text.includes("Aus")) freq = 120;
-        playTone(freq, step.time);
+        updatePhaseDot(currentPhaseIndex);
 
-        // Timer
-        let timeLeft = step.time;
-        timerText.innerText = timeLeft;
-        
+        // Audio – freq direkt aus der Phase-Config
+        playTone(step.freq, step.time);
+
+        // Timer – timestamp-basiert für Genauigkeit
+        let endTime = Date.now() + step.time * 1000;
+        timerText.innerText = step.time;
+
         clearInterval(countdownInterval);
         countdownInterval = setInterval(() => {
-            if(!isRunning) return;
-            timeLeft--;
-            if(timeLeft > 0) timerText.innerText = timeLeft;
-        }, 1000);
+            if (!isRunning) return;
+            const remaining = Math.ceil((endTime - Date.now()) / 1000);
+            if (remaining > 0) timerText.innerText = remaining;
+        }, 200); // 5× pro Sekunde für präzises Display
 
-        // Next Phase
+        // Nächste Phase
         phaseTimeout = setTimeout(() => {
             runPhase(index + 1);
         }, step.time * 1000);
     }
+
+    // --- Init ---
+    loadPrefs();
+})();
 </script>
 </body>
 </html>
